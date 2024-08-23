@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Quiz Uygulaması</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="container">
+        <div class="panel">
+            <button id="managePanelBtn">Quiz Uygulaması Yönetim Paneli</button>
+
+            <button id="difficulty-selection">
+                <label for="difficulty"> <b>Zorluk Seviyesini Seçin =></b> </label>
+                <select id="difficulty" onchange="filterByDifficulty()">
+                    <option value="">Hepsi</option>
+                    <option value="easy">Kolay</option>
+                    <option value="medium">Orta</option>
+                    <option value="hard">Zor</option>
+                </select>
+            </button>
+
+            <button id="startExamBtn">Sınava Başla</button>
+        </div>
+        <div class="question-list">
+            <input type="text" id="searchInput" placeholder="Soru Ara" onkeyup="filterQuestions()">
+            <div id="questionContainer">
+            </div>
+            <button id="addQuestionBtn">Soru Ekle</button>
+        </div>
+        <div class="exam-section">
+            <div id="examContainer">
+            </div>
+            <p id="scoreDisplay">Puan: 0</p>
+        </div>
+    </div>
+    <div id="questionModal" class="modal">
+        <div class="modal-content">
+            <span class="close">&times;</span>
+            <h2 id="modalTitle">Soru Ekle</h2>
+            <textarea id="questionText" placeholder="Soru metnini girin..."></textarea>
+            <button id="saveQuestionBtn">Kaydet</button>
+        </div>
+    </div>
+    <div id="editQuestionModal" class="modal">
+        <div class="modal-content">
+        <span class="close">&times;</span>
+        <h2>Soru Düzenle</h2>
+        <label for="editQuestionText"><b>Soru:</b></label>
+        <input type="text" id="editQuestionText">
+        
+        <label for="editOption1"><b>A:</b></label>
+        <input type="text" id="editOption1">
+        
+        <label for="editOption2"><b>B:</b></label>
+        <input type="text" id="editOption2">
+        
+        <label for="editOption3"><b>C:</b></label>
+        <input type="text" id="editOption3">
+        
+        <label for="editOption4"><b>D:</b></label>
+        <input type="text" id="editOption4">
+    
+        <label><b>Doğru Cevap:</b></label> <br>
+        <label><input type="radio" name="editCorrectOption" value="0">A</label>
+        <label><input type="radio" name="editCorrectOption" value="1">B</label>
+        <label><input type="radio" name="editCorrectOption" value="2">C</label>
+        <label><input type="radio" name="editCorrectOption" value="3">D</label>
+        <br> <br>
+        <label><b>Zorluk:</b></label> <br>
+        <label><input type="radio" name="editDifficulty" value="0" id="easy"> Kolay</label>
+        <label><input type="radio" name="editDifficulty" value="1" id="medium"> Orta</label>
+        <label><input type="radio" name="editDifficulty" value="2" id="hard"> Zor</label>
+    
+        <button id="saveEditQuestionBtn">Kaydet</button>
+        </div>
+    </div>
+  
+    <script src="script.js"></script>
+</body>
+</html>
