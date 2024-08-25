@@ -38,9 +38,26 @@
         <div class="modal-content">
             <span class="close">&times;</span>
             <h2 id="modalTitle">Soru Ekle</h2>
+            <label for="questionText"><b>Soru:</b></label>
             <textarea id="questionText" placeholder="Soru metnini girin..."></textarea>
+            <br> <br>
+            <label for="option1"><b>A:</b></label>
+            <input type="text" id="option1">
+            <label for="option2"><b>B:</b></label>
+            <input type="text" id="option2">
+            <label for="option3"><b>C:</b></label>
+            <input type="text" id="option3">
+            <label for="option4"><b>D:</b></label>
+            <input type="text" id="option4">
+            <label><b>Doğru Cevap:</b></label><br>
+            <label><input type="radio" name="correctOption" value="0">A</label>
+            <label><input type="radio" name="correctOption" value="1">B</label>
+            <label><input type="radio" name="correctOption" value="2">C</label>
+            <label><input type="radio" name="correctOption" value="3">D</label>
+            <br><br>
             <button id="saveQuestionBtn">Kaydet</button>
         </div>
+    </div>
     </div>
     <div id="editQuestionModal" class="modal">
         <div class="modal-content">
