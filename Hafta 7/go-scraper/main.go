@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"net/http"
+	"os"
 	"strings"
 
 	"github.com/PuerkitoBio/goquery"
@@ -44,7 +45,34 @@ func main() {
 	}
 }
 
+func createTxtFolder() {
+	if _, err := os.Stat("Txt"); os.IsNotExist(err) {
+		err := os.Mkdir("Txt", 0755)
+		if err != nil {
+			fmt.Println(Red + "Error creating Txt folder: " + err.Error() + Reset)
+			return
+		}
+		fmt.Println(Green + "Txt folder created successfully." + Reset)
+	}
+}
+
+func saveToFile(filename, content string) {
+	filePath := fmt.Sprintf("Txt/%s.txt", filename)
+	file, err := os.OpenFile(filePath, os.O_CREATE|os.O_WRONLY|os.O_TRUNC, 0644)
+	if err != nil {
+		fmt.Println(Red + "Error writing to file: " + err.Error() + Reset)
+		return
+	}
+	defer file.Close()
+
+	_, err = file.WriteString(content)
+	if err != nil {
+		fmt.Println(Red + "Error saving content: " + err.Error() + Reset)
+	}
+}
+
 func TheHackerNews() {
+	createTxtFolder()
 	fmt.Println(Cyan + "Scraping data from The Hacker News..." + Reset)
 	res, err := http.Get("https://thehackernews.com/")
 	if err != nil || res.StatusCode != 200 {
@@ -59,19 +87,26 @@ func TheHackerNews() {
 		return
 	}
 
+	var output string
 	doc.Find(".body-post.clear .clear.home-right").Each(func(i int, selection *goquery.Selection) {
 		title := strings.TrimSpace(selection.Find(".home-title").Text())
 		content := strings.TrimSpace(selection.Find(".home-desc").Text())
 		date := strings.TrimSpace(selection.Find(".h-datetime").Text())
+
+		entry := fmt.Sprintf("Title: %s\nDate: %s\nContent: %s\n\n", title, date, content)
+		output += entry
 
 		fmt.Println(Green + fmt.Sprintf("%d: %s", i+1, title) + Reset)
 		fmt.Println(Yellow + "Content Date: " + date + Reset)
 		fmt.Println(White + content + Reset)
 		fmt.Println(Cyan + "***********************************************************************" + Reset)
 	})
+
+	saveToFile("TheHackerNews", output)
 }
 
 func TechnoPat() {
+	createTxtFolder()
 	fmt.Println(Cyan + "Scraping data from TechnoPat..." + Reset)
 	res, err := http.Get("https://www.technopat.net")
 	if err != nil || res.StatusCode != 200 {
@@ -86,19 +121,26 @@ func TechnoPat() {
 		return
 	}
 
+	var output string
 	doc.Find(".td_module_14").Each(func(i int, selection *goquery.Selection) {
 		title := strings.TrimSpace(selection.Find("h3").Text())
 		content := strings.TrimSpace(selection.Find(".td-excerpt").Text())
 		date := strings.TrimSpace(selection.Find(".td-post-date").Text())
+
+		entry := fmt.Sprintf("Title: %s\nDate: %s\nContent: %s\n\n", title, date, content)
+		output += entry
 
 		fmt.Println(Green + fmt.Sprintf("%d: %s", i+1, title) + Reset)
 		fmt.Println(Yellow + "Content Date: " + date + Reset)
 		fmt.Println(White + content + Reset)
 		fmt.Println(Cyan + "***********************************************************************" + Reset)
 	})
+
+	saveToFile("TechnoPat", output)
 }
 
 func Maçkolik() {
+	createTxtFolder()
 	fmt.Println(Cyan + "Scraping data from Maçkolik..." + Reset)
 	res, err := http.Get("https://arsiv.mackolik.com/News/")
 	if err != nil || res.StatusCode != 200 {
@@ -113,14 +155,20 @@ func Maçkolik() {
 		return
 	}
 
+	var output string
 	doc.Find(".news-coll-temp").Each(func(i int, selection *goquery.Selection) {
 		title := strings.TrimSpace(selection.Find(".news-coll-img").Text())
 		content := strings.TrimSpace(selection.Find(".news-coll-text").Text())
 		date := strings.TrimSpace(selection.Find(".news-coll-date").Text())
+
+		entry := fmt.Sprintf("Title: %s\nDate: %s\nContent: %s\n\n", title, date, content)
+		output += entry
 
 		fmt.Println(Green + fmt.Sprintf("%d: %s", i+1, title) + Reset)
 		fmt.Println(Yellow + "Content Date: " + date + Reset)
 		fmt.Println(White + content + Reset)
 		fmt.Println(Cyan + "***********************************************************************" + Reset)
 	})
+
+	saveToFile("Maçkolik", output)
 }
